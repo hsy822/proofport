@@ -1,0 +1,14 @@
+# Build outputs
+target/
+dist/
+*.gz
+*.json
+*.r1cs
+
+# Node & Vite
+node_modules/
+.vite/
+
+# OS files
+.DS_Store
+.env
