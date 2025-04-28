@@ -1,0 +1,7 @@
+[package]
+name = "group_membership"
+type = "bin"
+authors = ["Proofport"]
+description = "Proofport CIP-001 Group Membership Proof Circuit"
+
+[dependencies]

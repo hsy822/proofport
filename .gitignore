@@ -1,14 +1,23 @@
 # Build outputs
-target/
-dist/
+target
+dist
 *.gz
-*.json
 *.r1cs
+*.proof
+*.wtns
+out
+.next
+.cache
+Prover.toml
+garaga-venv
 
-# Node & Vite
-node_modules/
-.vite/
+node_modules
 
-# OS files
+# OS & Env
 .DS_Store
 .env
+.env.*
+*.log
+
+# VSCode
+.vscode/
