@@ -1,5 +1,17 @@
 # CIP-001: Group Membership Proof
 
+## 0. Metadata (Required)
+
+_This section is **mandatory**. Every CIP must include a Metadata block with the following fields:_
+
+- circuit_id: group-membership
+- version: CIP-001
+- description: Proof of Merkle group membership inclusion
+- public_inputs:
+  - root
+
+<!-- End of Metadata -->
+
 ## 1. Overview
 
 - A circuit that enables a user to prove membership within a specific Merkle Tree Root without revealing private information.

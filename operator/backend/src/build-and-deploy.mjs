@@ -1,50 +1,190 @@
 import { execa } from "execa";
 import path from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import process from "node:process";
+import fetch from "node-fetch";
+
+const colors = {
+  reset: "\x1b[0m",
+  cyan: "\x1b[36m",
+  green: "\x1b[32m",
+  red: "\x1b[31m",
+};
+
+// Parse CIP metadata
+function parseCIPMetadata(circuitName) {
+  const cipPath = path.resolve(`../../docs/cips/CIP-001-${circuitName}.md`);
+  if (!existsSync(cipPath)) {
+    throw new Error(`CIP file not found: ${cipPath}`);
+  }
+
+  const content = readFileSync(cipPath, "utf8");
+  const metadataBlock = content.split("## 0. Metadata")[1]?.split("<!-- End of Metadata -->")[0];
+  if (!metadataBlock) {
+    throw new Error(`Metadata section not found in CIP: ${cipPath}`);
+  }
+
+  const getField = (field) => metadataBlock.match(new RegExp(`${field}:\\s*(.*)`))?.[1]?.trim();
+  const circuit_id = getField("circuit_id");
+  const version = getField("version");
+  const description = getField("description");
+
+  // parse public_inputs
+  const publicInputsSection = metadataBlock.split("public_inputs:")[1];
+  if (!publicInputsSection) {
+    throw new Error("public_inputs section not found in Metadata.");
+  }
+  const public_inputs = [...publicInputsSection.matchAll(/-\s*(\w+)/g)].map(m => m[1]);
+
+  if (!circuit_id || !version || !description || public_inputs.length === 0) {
+    throw new Error(`Incomplete metadata in CIP: ${cipPath}`);
+  }
+
+  return { circuit_id, version, description, public_inputs };
+}
 
 async function main() {
-  const circuitName = "group-membership";
-  const circuitPath = path.resolve("../../packages/circuits", circuitName);
+  const circuitName = process.argv[2];
 
-  if (!existsSync(circuitPath)) {
-    console.error(`❌ Circuit path not found: ${circuitPath}`);
+  if (!circuitName) {
+    console.error(`${colors.red}Error: Please provide a circuit name as an argument.${colors.reset}`);
     process.exit(1);
   }
 
-  console.log("🛠 Step 1: Compiling circuit with nargo...");
+  const circuitPath = path.resolve("../../packages/circuits", circuitName);
+  const verifierOutputPath = path.join(circuitPath, "target", "Verifier.sol");
+
+  if (!existsSync(circuitPath)) {
+    console.error(`${colors.red}Error: Circuit path not found: ${circuitPath}${colors.reset}`);
+    process.exit(1);
+  }
+
+  console.log(`\n### Step 1: Compiling Noir circuit '${circuitName}'`);
+  console.log("---");
   await execa("nargo", ["compile"], { cwd: circuitPath, stdio: "inherit" });
 
-  console.log("🔑 Step 2: Generating verifying key with bb...");
+  console.log(`\n### Step 2: Generating Verification Key (VK)`);
+  console.log("---");
   await execa("bb", [
     "write_vk",
     "--scheme", "ultra_honk",
     "--oracle_hash", "keccak",
-    "-b", "target/group_membership.json",
+    "-b", `target/${circuitName.replace(/-/g, "_")}.json`,
     "-o", "target",
   ], { cwd: circuitPath, stdio: "inherit" });
 
-  console.log("📜 Step 3: Generating EVM Solidity verifier with bb...");
+  console.log(`\n### Step 3: Generating Solidity Verifier contract`);
+  console.log("---");
   await execa("bb", [
     "write_solidity_verifier",
     "-k", "target/vk",
     "-o", "target/Verifier.sol",
   ], { cwd: circuitPath, stdio: "inherit" });
 
+  console.log(`\n### Step 4: Generating Starknet Verifier with Garaga`);
+  console.log("---");
   try {
-    console.log("🧠 Step 4: Generating Starknet verifier with garaga...");
     await execa("/Users/sooyounghyun/Desktop/dev/garaga/venv/bin/garaga", [
       "gen",
       "--system", "ultra_keccak_zk_honk",
       "--vk", "target/vk",
+      "--project-name", "verifier",
     ], { cwd: circuitPath, stdio: "inherit" });
   } catch (err) {
-    console.warn("⚠️ garaga fmt failed, but verifier should have been generated.");
+    console.warn(`${colors.red}Warning: Garaga formatting failed, continuing...${colors.reset}`);
   }
-  console.log("All build steps completed successfully!");
+
+  console.log(`\n### Step 5: Fetching Predeployed Starknet Account`);
+  console.log("---");
+  const accountsResponse = await fetch("http://localhost:5050/predeployed_accounts");
+  const accounts = await accountsResponse.json();
+  const firstAccount = accounts[0];
+
+  const accountsFilePath = path.join(circuitPath, "accounts.json");
+  writeFileSync(accountsFilePath, JSON.stringify({
+    "alpha-sepolia": { "devnet0": firstAccount }
+  }, null, 2));
+
+  console.log(`\n### Step 6: Building and Deploying to Local EVM (Anvil)`);
+  console.log("---");
+  await execa("forge", ["build"], { cwd: circuitPath, stdio: "inherit" });
+
+  const evmDeployResult = await execa("forge", [
+    "create",
+    "--rpc-url", "http://localhost:8545",
+    "--private-key", process.env.PRIVATE_KEY,
+    "--broadcast",
+    `${verifierOutputPath}:HonkVerifier`
+  ], { stdio: "pipe" });
+
+  const evmAddressMatch = evmDeployResult.stdout.match(/Deployed to: (0x[a-fA-F0-9]+)/);
+  const evmAddress = evmAddressMatch ? evmAddressMatch[1] : "";
+  console.log(`EVM Verifier deployed at address: ${colors.cyan}${evmAddress}${colors.reset}`);
+
+  console.log(`\n### Step 7: Declaring and Deploying Starknet Contract`);
+  console.log("---");
+  const declareResult = await execa("sncast", [
+    "--account", "devnet0",
+    "--accounts-file", accountsFilePath,
+    "declare",
+    "--contract-name", "UltraKeccakZKHonkVerifier",
+    "--url", "http://localhost:5050",
+  ], { cwd: path.join(circuitPath, "verifier"), stdio: "pipe" });
+
+  const classHashMatch = declareResult.stdout.match(/class_hash:\s*(0x[0-9a-fA-F]+)/);
+  const classHash = classHashMatch ? classHashMatch[1] : "";
+  console.log(`Starknet Class Hash: ${colors.cyan}${classHash}${colors.reset}`);
+
+  await execa("sncast", [
+    "--account", "devnet0",
+    "--accounts-file", accountsFilePath,
+    "deploy",
+    "--class-hash", classHash,
+    "--url", "http://localhost:5050",
+  ], { cwd: path.join(circuitPath, "verifier"), stdio: "inherit" });
+
+  console.log(`\n### Step 8: Updating Verifier Registry`);
+  console.log("---");
+
+  // Fetch metadata from CIP
+  const { circuit_id, version, description, public_inputs } = parseCIPMetadata(circuitName);
+
+  const registryPath = path.resolve("../../packages/registry/verifier_registry.json");
+  const existingRegistry = existsSync(registryPath) ? JSON.parse(readFileSync(registryPath)) : {};
+
+  const chainIdEvm = "anvil";            // for now: anvil
+  const chainIdStarknet = "starknet-devnet"; // for now: starknet devnet
+  
+  existingRegistry[circuit_id] = {
+    circuit_id,
+    version,
+    description,
+    public_inputs,
+    chains: {
+      [chainIdEvm]: {
+        evm_address: evmAddress,
+        deployed_at: new Date().toISOString()
+      },
+      [chainIdStarknet]: {
+        starknet_class_hash: classHash,
+        deployed_at: new Date().toISOString()
+      }
+    }
+  };
+
+  writeFileSync(registryPath, JSON.stringify(existingRegistry, null, 2));
+
+  console.log(`\n### Step 9: Cleaning up Build Artifacts`);
+  console.log("---");
+  const rootOutPath = path.resolve("../../out");
+  const rootCachePath = path.resolve("../../cache");
+  rmSync(rootOutPath, { recursive: true, force: true });
+  rmSync(rootCachePath, { recursive: true, force: true });
+
+  console.log(`\n${colors.green}✔ Build, deploy, and registry update completed successfully.${colors.reset}\n`);
 }
 
 main().catch((err) => {
-  console.error("❌ Build and deploy failed:", err);
+  console.error(`${colors.red}\n Error: Build-and-Deploy process failed.${colors.reset}\n`, err);
   process.exit(1);
 });
