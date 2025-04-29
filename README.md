@@ -10,4 +10,16 @@ It enables DApp developers to plug-and-play standardized circuits, generate proo
 - Circuits: Open, versioned, and spec-compliant  
 - Proofs: Generated entirely in-browser
 
+| Tool                | Installed Version  | Note |
+|:--------------------|:-------------------|:-----|
+| Node.js             | v20.13.1            | ✅  |
+| Python              | 3.10.17             | ✅  |
+| Nargo (Noir CLI)    | 1.0.0-beta.3        | ✅  |
+| Garaga              | 0.17.0              | ✅  |
+| Sncast              | 0.41.0              | ✅  |
+| Scarb               | 2.11.4 (Cairo: 2.11.4) | ✅  |
+| Starknet Devnet     | 0.3.0                | ✅  |
+| Anvil (EVM local)   | 1.0.0-stable         | ✅  |
+| asdf                | v0.16.7             | ✅  |
+
 ---
