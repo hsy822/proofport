@@ -10,7 +10,7 @@ out
 .cache
 Prover.toml
 garaga-venv
-
+.turbo
 node_modules
 
 # OS & Env
@@ -18,6 +18,7 @@ node_modules
 .env
 .env.*
 *.log
+.tool-versions
 
 # VSCode
 .vscode/

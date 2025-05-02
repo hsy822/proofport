@@ -1,6 +1,6 @@
 
 use super::honk_verifier_constants::{vk, VK_HASH, precomputed_lines};
-use super::honk_verifier_circuits::{run_GRUMPKIN_ZK_HONK_SUMCHECK_SIZE_18_PUB_17_circuit, run_GRUMPKIN_ZKHONK_PREP_MSM_SCALARS_SIZE_18_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_INIT_SIZE_18_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_LOOP_SIZE_18_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_DONE_SIZE_18_circuit, run_BN254_EVAL_FN_CHALLENGE_SING_58P_RLC_circuit, is_on_curve_bn254};
+use super::honk_verifier_circuits::{run_GRUMPKIN_ZK_HONK_SUMCHECK_SIZE_13_PUB_17_circuit, run_GRUMPKIN_ZKHONK_PREP_MSM_SCALARS_SIZE_13_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_INIT_SIZE_13_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_LOOP_SIZE_13_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_DONE_SIZE_13_circuit, run_BN254_EVAL_FN_CHALLENGE_SING_53P_RLC_circuit, is_on_curve_bn254};
 
 #[starknet::interface]
 pub trait IUltraKeccakZKHonkVerifier<TContractState> {
@@ -18,7 +18,7 @@ mod UltraKeccakZKHonkVerifier {
     use garaga::basic_field_ops::{batch_3_mod_p, sub_mod_p};
     use garaga::circuits::ec;
     use garaga::utils::neg_3;
-    use super::{vk, VK_HASH, precomputed_lines, run_GRUMPKIN_ZK_HONK_SUMCHECK_SIZE_18_PUB_17_circuit, run_GRUMPKIN_ZKHONK_PREP_MSM_SCALARS_SIZE_18_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_INIT_SIZE_18_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_LOOP_SIZE_18_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_DONE_SIZE_18_circuit, run_BN254_EVAL_FN_CHALLENGE_SING_58P_RLC_circuit, is_on_curve_bn254};
+    use super::{vk, VK_HASH, precomputed_lines, run_GRUMPKIN_ZK_HONK_SUMCHECK_SIZE_13_PUB_17_circuit, run_GRUMPKIN_ZKHONK_PREP_MSM_SCALARS_SIZE_13_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_INIT_SIZE_13_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_LOOP_SIZE_13_circuit, run_GRUMPKIN_ZK_HONK_EVALS_CONS_DONE_SIZE_13_circuit, run_BN254_EVAL_FN_CHALLENGE_SING_53P_RLC_circuit, is_on_curve_bn254};
     use garaga::utils::noir::{ZKHonkProof, G2_POINT_KZG_1, G2_POINT_KZG_2};
     use garaga::utils::noir::honk_transcript::{Point256IntoCircuitPoint, KeccakHasherState};
     use garaga::utils::noir::zk_honk_transcript::{ZKHonkTranscriptTrait, ZK_BATCHED_RELATION_PARTIAL_LENGTH};
@@ -55,7 +55,7 @@ mod UltraKeccakZKHonkVerifier {
 
             let (transcript, transcript_state, base_rlc) = ZKHonkTranscriptTrait::from_proof::<KeccakHasherState>(vk.circuit_size, vk.public_inputs_size, vk.public_inputs_offset, full_proof.proof);
             let log_n = vk.log_circuit_size;
-            let (sum_check_rlc, honk_check) = run_GRUMPKIN_ZK_HONK_SUMCHECK_SIZE_18_PUB_17_circuit(
+            let (sum_check_rlc, honk_check) = run_GRUMPKIN_ZK_HONK_SUMCHECK_SIZE_13_PUB_17_circuit(
                 p_public_inputs: full_proof.proof.public_inputs,
                 p_pairing_point_object: full_proof.proof.pairing_point_object,
                 p_public_inputs_offset: vk.public_inputs_offset.into(),
@@ -77,12 +77,12 @@ mod UltraKeccakZKHonkVerifier {
             );
 
             const CONST_PROOF_SIZE_LOG_N: usize = 28;
-            let (mut challenge_poly_eval, mut root_power_times_tp_gemini_r) = run_GRUMPKIN_ZK_HONK_EVALS_CONS_INIT_SIZE_18_circuit(
+            let (mut challenge_poly_eval, mut root_power_times_tp_gemini_r) = run_GRUMPKIN_ZK_HONK_EVALS_CONS_INIT_SIZE_13_circuit(
                 tp_gemini_r: transcript.gemini_r.into(),
                 modulus: mod_grumpkin,
             );
             for i in 0..CONST_PROOF_SIZE_LOG_N {
-                let (new_challenge_poly_eval, new_root_power_times_tp_gemini_r) = run_GRUMPKIN_ZK_HONK_EVALS_CONS_LOOP_SIZE_18_circuit(
+                let (new_challenge_poly_eval, new_root_power_times_tp_gemini_r) = run_GRUMPKIN_ZK_HONK_EVALS_CONS_LOOP_SIZE_13_circuit(
                     challenge_poly_eval: challenge_poly_eval,
                     root_power_times_tp_gemini_r: root_power_times_tp_gemini_r,
                     tp_sumcheck_u_challenge: (*transcript.sum_check_u_challenges.at(i)).into(),
@@ -91,7 +91,7 @@ mod UltraKeccakZKHonkVerifier {
                 challenge_poly_eval = new_challenge_poly_eval;
                 root_power_times_tp_gemini_r = new_root_power_times_tp_gemini_r;
             };
-            let (vanishing_check, diff_check) = run_GRUMPKIN_ZK_HONK_EVALS_CONS_DONE_SIZE_18_circuit(
+            let (vanishing_check, diff_check) = run_GRUMPKIN_ZK_HONK_EVALS_CONS_DONE_SIZE_13_circuit(
                 p_libra_evaluation: u256_to_u384(full_proof.proof.libra_evaluation),
                 p_libra_poly_evals: full_proof.proof.libra_poly_evals,
                 tp_gemini_r: transcript.gemini_r.into(),
@@ -149,17 +149,12 @@ mod UltraKeccakZKHonkVerifier {
             scalar_51,
             scalar_52,
             scalar_53,
-            scalar_54,
-            scalar_55,
-            scalar_56,
-            scalar_57,
-            scalar_58,
             scalar_69,
             scalar_70,
             scalar_71,
             scalar_72,
         ) =
-            run_GRUMPKIN_ZKHONK_PREP_MSM_SCALARS_SIZE_18_circuit(
+            run_GRUMPKIN_ZKHONK_PREP_MSM_SCALARS_SIZE_13_circuit(
             p_sumcheck_evaluations: full_proof.proof.sumcheck_evaluations,
             p_gemini_masking_eval: u256_to_u384(full_proof.proof.gemini_masking_eval),
             p_gemini_a_evaluations: full_proof.proof.gemini_a_evaluations,
@@ -213,11 +208,11 @@ full_proof.proof.lookup_read_tags.into(), // Proof point 9
 
             for gem_comm in full_proof.proof.gemini_fold_comms {
                 _points.append((*gem_comm).into());
-            }; // log_n -1 = 17 points || Proof points 10-26
+            }; // log_n -1 = 12 points || Proof points 10-21
             for lib_comm in full_proof.proof.libra_commitments {
                 _points.append((*lib_comm).into());
-            };// 3 points || Proof points 27-29
-            _points.append(full_proof.proof.kzg_quotient.into()); // Proof point 30
+            };// 3 points || Proof points 22-24
+            _points.append(full_proof.proof.kzg_quotient.into()); // Proof point 25
             _points.append(BN254_G1_GENERATOR);
 
             let points = _points.span();
@@ -269,11 +264,6 @@ full_proof.proof.lookup_read_tags.into(), // Proof point 9
             into_u256_unchecked(scalar_51),
             into_u256_unchecked(scalar_52),
             into_u256_unchecked(scalar_53),
-            into_u256_unchecked(scalar_54),
-            into_u256_unchecked(scalar_55),
-            into_u256_unchecked(scalar_56),
-            into_u256_unchecked(scalar_57),
-            into_u256_unchecked(scalar_58),
             into_u256_unchecked(scalar_69),
             into_u256_unchecked(scalar_70),
             into_u256_unchecked(scalar_71),
@@ -282,13 +272,13 @@ full_proof.proof.lookup_read_tags.into(), // Proof point 9
 
             
 
-            full_proof.msm_hint_batched.RLCSumDlogDiv.validate_degrees_batched(58);
+            full_proof.msm_hint_batched.RLCSumDlogDiv.validate_degrees_batched(53);
             // HASHING: GET ECIP BASE RLC COEFF.
             let (s0, s1, s2): (felt252, felt252, felt252) = hades_permutation(
                 'MSM_G1', 0, 1
             ); // Init Sponge state
             let (s0, s1, s2) = hades_permutation(
-                s0 + 0.into(), s1 + 58.into(), s2
+                s0 + 0.into(), s1 + 53.into(), s2
             ); // Include curve_index and msm size
 
             // Hash precomputed VK hash with last transcript state
@@ -302,8 +292,8 @@ full_proof.proof.lookup_read_tags.into(), // Proof point 9
             );
 
             // Check input points are on curve. No need to hash them : they are already in the transcript + we precompute the VK hash.
-            // Skip the first 27 points as they are from VK and keep the last 30 proof points
-            for point in points.slice(27, 30) {
+            // Skip the first 27 points as they are from VK and keep the last 25 proof points
+            for point in points.slice(27, 25) {
                 assert(is_on_curve_bn254(*point, mod_bn), 'proof point not on curve');
             };
 
@@ -357,8 +347,8 @@ full_proof.proof.lookup_read_tags.into(), // Proof point 9
                 (5279154705627724249993186093248666011, 345561521626566187713367793525016877467, -1, -1)
             ];
 
-            let (lhs_fA0) = run_BN254_EVAL_FN_CHALLENGE_SING_58P_RLC_circuit(A:random_point, coeff:mb.coeff0, SumDlogDivBatched:full_proof.msm_hint_batched.RLCSumDlogDiv, modulus:mod_bn);
-            let (lhs_fA2) = run_BN254_EVAL_FN_CHALLENGE_SING_58P_RLC_circuit(A:G1Point{x:mb.x_A2, y:mb.y_A2}, coeff:mb.coeff2, SumDlogDivBatched:full_proof.msm_hint_batched.RLCSumDlogDiv, modulus:mod_bn);
+            let (lhs_fA0) = run_BN254_EVAL_FN_CHALLENGE_SING_53P_RLC_circuit(A:random_point, coeff:mb.coeff0, SumDlogDivBatched:full_proof.msm_hint_batched.RLCSumDlogDiv, modulus:mod_bn);
+            let (lhs_fA2) = run_BN254_EVAL_FN_CHALLENGE_SING_53P_RLC_circuit(A:G1Point{x:mb.x_A2, y:mb.y_A2}, coeff:mb.coeff2, SumDlogDivBatched:full_proof.msm_hint_batched.RLCSumDlogDiv, modulus:mod_bn);
 
             let zk_ecip_batched_lhs = sub_mod_p(lhs_fA0, lhs_fA2, mod_bn);
 

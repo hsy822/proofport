@@ -5,3 +5,4 @@ authors = ["Proofport"]
 description = "Proofport CIP-001 Group Membership Proof Circuit"
 
 [dependencies]
+binary_merkle_root = { git = "https://github.com/privacy-scaling-explorations/zk-kit.noir", tag = "binary-merkle-root-v0.0.1", directory = "packages/binary-merkle-root" }

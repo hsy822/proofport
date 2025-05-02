@@ -1,50 +1,51 @@
-# CIP-001: Group Membership Proof
+# CIP-001: Group Membership Proof (binary_merkle_root based)
 
 ## 0. Metadata (Required)
 
-_This section is **mandatory**. Every CIP must include a Metadata block with the following fields:_
-
 - circuit_id: group-membership
 - version: CIP-001
-- description: Proof of Merkle group membership inclusion
+- description: Proves Merkle inclusion using binary_merkle_root helper
 - public_inputs:
   - root
 
 <!-- End of Metadata -->
 
+---
+
 ## 1. Overview
 
-- A circuit that enables a user to prove membership within a specific Merkle Tree Root without revealing private information.
-- Allows users to prove their affiliation without disclosing their identity.
-- Can be applied to Private DAOs, Private Access Control Systems, Private Event Attendees, and similar use cases.
+This circuit verifies, in zero-knowledge, that a user-provided leaf is included in a Merkle tree defined by a given root.  
+It uses the proven and audited `binary_merkle_root` helper function for compatibility and correctness.
 
-## 2. Motivation
+---
 
-- Enables maintaining the whitelist off-chain while proving membership on-chain.
-- Allows for dynamic list management while ensuring secure and cost-efficient verification.
+## 2. Inputs and Outputs
 
-## 3. Inputs and Outputs
+| Name                | Type                    | Visibility | Description                            |
+|---------------------|-------------------------|------------|----------------------------------------|
+| identity_commitment | Field                   | private    | Poseidon hash of the user identity     |
+| merkle_proof_length | u32                     | private    | Actual depth of the proof              |
+| merkle_proof_indices| [u1; 4]         | private    | Index bits (left/right path)           |
+| merkle_proof_siblings| [Field; 4]     | private    | Merkle sibling hashes                  |
+| root                | Field                   | public     | Merkle root to verify against          |
 
-| Name | Type | Visibility | Description |
-|:---|:---|:---|:---|
-| message | [Field; 62] | private | The message used to construct the Merkle Leaf |
-| index | Field | private | The index of the Leaf within the Merkle Tree |
-| hashpath | [Field; 40] | private | The Merkle Proof path |
-| root | Field | public | The Merkle Tree Root to be verified against |
+---
 
-- The message is hashed to create a leaf, and the Merkle Proof is used to verify the connection to the given root.
-- The only public input is the Merkle Tree Root.
+## 3. Circuit Description (Noir)
 
-## 4. Circuit Description
+> This circuit uses the `binary_merkle_root` implementation from the [privacy-scaling-explorations/zk-kit.noir](https://github.com/privacy-scaling-explorations/zk-kit.noir) repository.
 
 ```rust
-fn main(message : [Field; 62], index : Field, hashpath : [Field; 40], root : Field) {
-    let leaf = std::hash::hash_to_field(message.as_slice());
-    let merkle_root = std::merkle::compute_merkle_root(leaf, index, hashpath);
-    assert(merkle_root == root);
+use binary_merkle_root::binary_merkle_root;
+use std::hash::poseidon::bn254::hash_2 as poseidon2;
+
+fn main(
+    identity_commitment: Field,
+    merkle_proof_length: u32,
+    merkle_proof_indices: [u1; 4],
+    merkle_proof_siblings: [Field; 4],
+    root: pub Field,
+) {
+    let computed_root = binary_merkle_root(poseidon2, identity_commitment, merkle_proof_length, merkle_proof_indices, merkle_proof_siblings);
+    assert(computed_root == root);
 }
-```
- 
-- message is hashed into a leaf.
-- Using index and hashpath, the Merkle root is recomputed.
-- The circuit asserts that the recomputed root matches the provided public root.

@@ -67,7 +67,6 @@ async function main() {
   console.log("---");
   await execa("bb", [
     "write_vk",
-    "--scheme", "ultra_honk",
     "--oracle_hash", "keccak",
     "-b", `target/${circuitName.replace(/-/g, "_")}.json`,
     "-o", "target",
@@ -149,17 +148,29 @@ async function main() {
   // Fetch metadata from CIP
   const { circuit_id, version, description, public_inputs } = parseCIPMetadata(circuitName);
 
+  // Load compiled circuit metadata (target/${circuit_name}.json)
+  const circuitJsonPath = path.join(circuitPath, "target", `${circuitName.replace(/-/g, "_")}.json`);
+  const compiledCircuit = JSON.parse(readFileSync(circuitJsonPath, "utf-8"));
+  const { noir_version, abi, hash, bytecode } = compiledCircuit;
+
+  // Update registry
   const registryPath = path.resolve("../../packages/registry/verifier_registry.json");
   const existingRegistry = existsSync(registryPath) ? JSON.parse(readFileSync(registryPath)) : {};
 
-  const chainIdEvm = "anvil";            // for now: anvil
-  const chainIdStarknet = "starknet-devnet"; // for now: starknet devnet
-  
+  const chainIdEvm = "anvil";              // local EVM
+  const chainIdStarknet = "starknet-devnet"; // local Starknet
+
   existingRegistry[circuit_id] = {
     circuit_id,
     version,
     description,
     public_inputs,
+    metadata: {
+      noir_version,
+      hash,
+      abi,
+      bytecode
+    },
     chains: {
       [chainIdEvm]: {
         evm_address: evmAddress,
