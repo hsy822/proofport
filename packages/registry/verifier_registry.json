@@ -67,11 +67,11 @@
     "chains": {
       "anvil": {
         "evm_address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        "deployed_at": "2025-05-02T09:38:23.999Z"
+        "deployed_at": "2025-05-03T13:12:50.484Z"
       },
       "starknet-devnet": {
         "starknet_class_hash": "0x01efa403ca3afb62728faf374348aaa1246af573423cf1a67449d4f65e14379c",
-        "deployed_at": "2025-05-02T09:38:24.004Z"
+        "deployed_at": "2025-05-03T13:12:50.487Z"
       }
     }
   }
