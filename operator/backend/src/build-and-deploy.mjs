@@ -1,8 +1,9 @@
 import { execa } from "execa";
 import path from "node:path";
-import { existsSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, rmSync, readdirSync } from "node:fs";
 import process from "node:process";
 import fetch from "node-fetch";
+import "dotenv/config";
 
 const colors = {
   reset: "\x1b[0m",
@@ -13,7 +14,18 @@ const colors = {
 
 // Parse CIP metadata
 function parseCIPMetadata(circuitName) {
-  const cipPath = path.resolve(`../../docs/cips/CIP-001-${circuitName}.md`);
+  const cipsDir = path.resolve("../../docs/cips");
+  const files = readdirSync(cipsDir);
+  const cipFile = files.find(file =>
+    file.endsWith(".md") &&
+    file.toLowerCase().includes(circuitName.toLowerCase())
+  );
+
+  if (!cipFile) {
+    throw new Error(`No CIP markdown file found for circuit: ${circuitName}`);
+  }
+
+  const cipPath = path.join(cipsDir, cipFile);
   if (!existsSync(cipPath)) {
     throw new Error(`CIP file not found: ${cipPath}`);
   }

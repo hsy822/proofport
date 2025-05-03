@@ -18,6 +18,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "dotenv": "^16.5.0",
     "ethers": "^6.13.7",
     "node-fetch": "^3.3.2",
     "solc": "^0.8.29"
