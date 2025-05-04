@@ -9,16 +9,7 @@ function toHex(n: bigint): string {
   return "0x" + n.toString(16).padStart(64, "0");
 }
 
-/**
- * Generates a fixed-depth (MAX_DEPTH) Merkle root, leaf, index, and padded proof path
- * @param leaves raw identity values (e.g., addresses) as strings
- */
-export function createMerkleProof(leaves: string[]): {
-  root: string;
-  leaf: string;
-  index: number;
-  path: string[];
-} {
+export function createMerkleRoot(leaves: string[]): string {
   const hashedLeaves = leaves.map((v) => poseidon2([BigInt(v), 0n]));
   const maxLeaves = 2 ** MAX_DEPTH;
 
@@ -35,19 +26,5 @@ export function createMerkleProof(leaves: string[]): {
     tree.push(next);
   }
 
-  const index = 0; // always use the first leaf
-  const path: string[] = [];
-  let i = index;
-  for (let d = 0; d < MAX_DEPTH; d++) {
-    const sibling = tree[d][i ^ 1];
-    path.push(toHex(sibling));
-    i = Math.floor(i / 2);
-  }
-
-  return {
-    root: toHex(tree[MAX_DEPTH][0]),
-    leaf: toHex(hashedLeaves[index]),
-    index,
-    path,
-  };
+  return toHex(tree[MAX_DEPTH][0]);
 }

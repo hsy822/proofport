@@ -15,15 +15,22 @@
     "build": "tsc --project tsconfig.esm.json"
   },
   "dependencies": {
+    "@aztec/bb.js": "0.85.0",
     "@ethersproject/bignumber": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
+    "@noir-lang/noir_js": "1.0.0-beta.3",
     "@zkpassport/poseidon2": "^0.6.1",
     "circomlibjs": "^0.1.7",
     "ethers": "^6.13.0",
-    "poseidon-lite": "^0.3.0"
+    "garaga": "^0.17.0",
+    "poseidon-lite": "^0.3.0",
+    "react": "^18.3.1",
+    "starknet": "^7.1.0"
   },
   "devDependencies": {
     "@types/circomlibjs": "^0.1.6",
+    "@types/react": "^18.3.20",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "publishConfig": {

@@ -21,5 +21,5 @@ It enables DApp developers to plug-and-play standardized circuits, generate proo
 | Starknet Devnet     | 0.3.0                | ✅  |
 | Anvil (EVM local)   | 1.0.0-stable         | ✅  |
 | asdf                | v0.16.7             | ✅  |
-
+| barretenberg        | v0.82.2             | ✅  |
 ---

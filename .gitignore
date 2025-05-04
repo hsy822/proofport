@@ -19,6 +19,7 @@ node_modules
 .env.*
 *.log
 .tool-versions
+.accounts.json
 
 # VSCode
 .vscode/

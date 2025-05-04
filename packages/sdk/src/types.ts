@@ -15,6 +15,7 @@ export interface ProofVerifyParams {
   chainId: string;
   publicInputs: Record<string, string>;
   proof: string;
+  calldata?: any;
 }
 
 export interface NoirType {
@@ -49,7 +50,7 @@ export interface RegistryEntry {
   chains: {
     [chainId: string]: {
       evm_address?: string;
-      starknet_class_hash?: string;
+      starknet_address?: string;
       deployed_at: string;
     };
   };

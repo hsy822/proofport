@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { createMerkleProof, getProofRequestUrl, verifyProof } from "@proofport/sdk";
+import { groupMembership, verifyProof } from "@proofport/sdk";
 import { JsonRpcProvider, Wallet } from "ethers";
 
 const whitelist = [
-  "0xad94ba6edaeb297efc012429e70467c0725692e3",
   "0x4Ca47a1126f0A806cDC0AAa2268446A09D6A7CD6",
   "0x0D27320672eB296d39dF4c57e36B6b199091ECB5",
+  "0xAd94ba6EDAEb297EFC012429e70467C0725692e3", // My address
   "0x8A50Fb1B8F164AC74fBee2966b9C26C6A985847D",
 ];
 
@@ -17,30 +17,20 @@ export function EthereumPanel() {
 
   const chainId = "anvil";
 
+  const proofData = groupMembership.useProofListener();
+
   useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (!event.data?.proof || !event.data?.publicInputs) return;
-      setProof(event.data.proof);
-      setRoot(event.data.publicInputs.root);
-      setCircuitId(event.data.circuitId);
+    if (proofData) {
+      if(chainId == "anvil"){
+        setProof(proofData.proof);
+        setRoot(proofData.publicInputs.root);
+        setCircuitId(proofData.circuitId);
+      }
     }
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [proofData]);
 
   const handleGenerateProof = async () => {
-    const { root, leaf, index, path } = createMerkleProof(whitelist);
-    const url = getProofRequestUrl({
-      circuitId: "group-membership",
-      chainId,
-      publicInputs: { root },
-      metadata: {
-        leaf,
-        index: index.toString(),
-        hashpath: JSON.stringify(path),
-      },
-    });
-    window.open(url, "_blank");
+    groupMembership.openGroupMembershipProofRequest(chainId, whitelist);
   };
 
   const handleVerify = async () => {
@@ -57,7 +47,7 @@ export function EthereumPanel() {
 
   return (
     <div className="border border-yellow-300 bg-yellow-50 rounded-xl p-6">
-      <h2 className="text-xl font-bold text-yellow-900 mb-2">💡 Ethereum DApp</h2>
+      <h2 className="text-xl font-bold text-yellow-900 mb-2">Ethereum DApp</h2>
       <p className="text-sm text-gray-700 mb-4">
         Prove that your Ethereum wallet is in the allowlist — without revealing which one.
       </p>
@@ -91,20 +81,20 @@ export function EthereumPanel() {
         className="mt-4 px-4 py-2 bg-green-600 text-white rounded w-full font-semibold hover:bg-green-700 transition"
         onClick={handleVerify}
       >
-        ✅ On-chain Verification
+        On-chain Verification
       </button>
 
       {proof && status === "idle" && (
         <p className="mt-4 text-blue-600 text-sm">Proof received. Click Submit to verify on-chain.</p>
       )}
       {status === "verifying" && (
-        <p className="mt-4 text-gray-500 text-sm">Verifying proof on-chain. Please wait...</p>
+        <p className="mt-4 text-sm text-yellow-600 animate-pulse">Verifying proof on-chain. Please wait...</p>
       )}
       {status === "success" && (
-        <p className="mt-4 text-green-700 text-sm font-semibold">Proof verified successfully.</p>
+        <p className="mt-4 text-sm text-green-700 font-semibold bg-green-100 rounded p-2">Proof verified successfully.</p>
       )}
       {status === "fail" && (
-        <p className="mt-4 text-red-600 text-sm font-semibold">Verification failed. Try again.</p>
+        <p className="mt-4 text-sm text-red-600 font-semibold bg-red-100 rounded p-2">Verification failed. Try again.</p>
       )}
     </div>
   );

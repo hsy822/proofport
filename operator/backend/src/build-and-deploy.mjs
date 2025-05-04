@@ -79,6 +79,7 @@ async function main() {
   console.log("---");
   await execa("bb", [
     "write_vk",
+    "--scheme", "ultra_honk",
     "--oracle_hash", "keccak",
     "-b", `target/${circuitName.replace(/-/g, "_")}.json`,
     "-o", "target",
@@ -97,7 +98,7 @@ async function main() {
   try {
     await execa("/Users/sooyounghyun/Desktop/dev/garaga/venv/bin/garaga", [
       "gen",
-      "--system", "ultra_keccak_zk_honk",
+      "--system", "ultra_keccak_honk",
       "--vk", "target/vk",
       "--project-name", "verifier",
     ], { cwd: circuitPath, stdio: "inherit" });
@@ -138,7 +139,7 @@ async function main() {
     "--account", "devnet0",
     "--accounts-file", accountsFilePath,
     "declare",
-    "--contract-name", "UltraKeccakZKHonkVerifier",
+    "--contract-name", "UltraKeccakHonkVerifier",
     "--url", "http://localhost:5050",
   ], { cwd: path.join(circuitPath, "verifier"), stdio: "pipe" });
 
@@ -146,13 +147,22 @@ async function main() {
   const classHash = classHashMatch ? classHashMatch[1] : "";
   console.log(`Starknet Class Hash: ${colors.cyan}${classHash}${colors.reset}`);
 
-  await execa("sncast", [
+  const deployResult = await execa("sncast", [
     "--account", "devnet0",
     "--accounts-file", accountsFilePath,
     "deploy",
     "--class-hash", classHash,
     "--url", "http://localhost:5050",
-  ], { cwd: path.join(circuitPath, "verifier"), stdio: "inherit" });
+  ], { cwd: path.join(circuitPath, "verifier"), stdio: "pipe" });
+
+  const contractAddressMatch = deployResult.stdout.match(/contract_address:\s*(0x[0-9a-fA-F]+)/);
+  const starknetAddress = contractAddressMatch ? contractAddressMatch[1] : "";
+
+  if (!starknetAddress) {
+    throw new Error("❌ Failed to parse Starknet contract address.");
+  }
+
+  console.log(`Starknet Contract Address: ${colors.cyan}${starknetAddress}${colors.reset}`);
 
   console.log(`\n### Step 8: Updating Verifier Registry`);
   console.log("---");
@@ -189,13 +199,26 @@ async function main() {
         deployed_at: new Date().toISOString()
       },
       [chainIdStarknet]: {
-        starknet_class_hash: classHash,
+        starknet_address: starknetAddress,
         deployed_at: new Date().toISOString()
       }
     }
   };
 
   writeFileSync(registryPath, JSON.stringify(existingRegistry, null, 2));
+
+  // console.log(`\n### Step 8.5: Saving Verification Key (VK) to Registry`);
+  // console.log("---");
+  // const vkSourcePath = path.join(circuitPath, "target", "vk");
+  // const vkDestinationPath = path.resolve("../../packages/registry", `vk_${circuit_id}.bin`);
+
+  // if (!existsSync(vkSourcePath)) {
+  //   throw new Error(`Verification key not found at: ${vkSourcePath}`);
+  // }
+
+  // const vkContent = readFileSync(vkSourcePath, "utf-8");
+  // writeFileSync(vkDestinationPath, vkContent);
+  // console.log(`Saved VK to: ${colors.cyan}${vkDestinationPath}${colors.reset}`);
 
   console.log(`\n### Step 9: Cleaning up Build Artifacts`);
   console.log("---");
