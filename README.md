@@ -2,6 +2,8 @@
 
 **Composable ZK Proof Circuits for Noir-based Applications**
 
+![screen](https://github.com/user-attachments/assets/425822fb-884f-4461-96a3-438250ab3e6b)
+
 Proofmesh is a modular, reusable ZK circuit registry and SDK built on Noir.
 It enables DApp developers to plug-and-play standardized circuits, generate proofs in the browser, and verify them across chains like Ethereum and Starknet and Aztec.
 
@@ -21,5 +23,5 @@ It enables DApp developers to plug-and-play standardized circuits, generate proo
 | Starknet Devnet     | 0.3.0                | ✅  |
 | Anvil (EVM local)   | 1.0.0-stable         | ✅  |
 | asdf                | v0.16.7             | ✅  |
-| barretenberg        | v0.82.2             | ✅  |
+| barretenberg        | v0.85.0             | ✅  |
 ---
