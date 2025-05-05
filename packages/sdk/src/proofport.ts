@@ -66,7 +66,7 @@ async function verifyProofOnEvm(
   }
 
   const publicInputsArray = registryEntry.public_inputs.map((key) => {
-    const val = publicInputs[key];
+    const val = (publicInputs as Record<string, string>)[key];;
     if (!val) throw new Error(`Missing public input: ${key}`);
     return hexZeroPad(val, 32);
   });

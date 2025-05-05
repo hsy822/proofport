@@ -1,22 +1,53 @@
-export interface ProofRequestParams {
-  circuitId: string;
+export interface GroupMembershipProofRequest {
+  circuitId: "group-membership";
   chainId: string;
-  publicInputs: Record<string, string>;
+  publicInputs: {
+    root: string;
+  };
   metadata?: {
-    tree?: string;         // optional
-    leaf?: string;         // required now
-    index?: string;        // required
-    hashpath?: string;     // stringified JSON array
+    tree?: string;
+    leaf: string;
+    index: string;
+    hashpath: string; // stringified JSON array
   };
 }
 
-export interface ProofVerifyParams {
-  circuitId: string;
+export interface EthBalanceProofRequest {
+  circuitId: "eth-balance";
   chainId: string;
-  publicInputs: Record<string, string>;
+  publicInputs: {
+    threshold: string;
+  };
+  metadata?: undefined;
+}
+
+// export interface TwitterFollowersProofRequest { ... }
+
+export type ProofRequestParams =
+  | GroupMembershipProofRequest
+  | EthBalanceProofRequest;
+
+export interface GroupMembershipProofVerify {
+  circuitId: "group-membership";
+  chainId: string;
+  publicInputs: {
+    root: string;
+  };
   proof: string;
   calldata?: any;
 }
+
+export interface EthBalanceProofVerify {
+  circuitId: "eth-balance";
+  chainId: string;
+  publicInputs: {
+    threshold: string;
+  };
+  proof: string;
+  calldata?: any;
+}
+
+export type ProofVerifyParams = GroupMembershipProofVerify | EthBalanceProofVerify;
 
 export interface NoirType {
   kind: "field" | "integer" | "array";
