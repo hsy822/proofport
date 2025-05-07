@@ -4,6 +4,7 @@ import { existsSync, readFileSync, writeFileSync, rmSync, readdirSync } from "no
 import process from "node:process";
 import fetch from "node-fetch";
 import "dotenv/config";
+import { execSync } from "node:child_process";
 
 const colors = {
   reset: "\x1b[0m",
@@ -53,6 +54,26 @@ function parseCIPMetadata(circuitName) {
   }
 
   return { circuit_id, version, description, public_inputs };
+}
+
+function tryGitPushIfAvailable() {
+  try {
+    if (process.env.IS_OPERATOR === "true") {
+      execSync("git rev-parse --is-inside-work-tree", { stdio: "ignore" });
+
+      execSync("git add ../../packages/registry/verifier_registry.json", { stdio: "inherit" });
+      execSync(`git commit -m "chore: update verifier_registry for ${new Date().toISOString()}"`, {
+        stdio: "inherit"
+      });
+
+      execSync("git push", { stdio: "inherit" });
+      console.log(`${colors.green} Git commit and push complete.${colors.reset}`);
+    } else {
+      console.log(`${colors.cyan} Git push skipped: operator-only functionality or no Git repo found.${colors.reset}`);
+    }
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 async function main() {
@@ -228,6 +249,10 @@ async function main() {
   rmSync(rootCachePath, { recursive: true, force: true });
 
   console.log(`\n${colors.green}✔ Build, deploy, and registry update completed successfully.${colors.reset}\n`);
+
+  console.log(`\n### Step 10: Pushing Registry to Git (if operator)`);
+  console.log("---");
+  tryGitPushIfAvailable();
 }
 
 main().catch((err) => {

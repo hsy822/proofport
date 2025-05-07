@@ -108,7 +108,7 @@ export async function verifyProofOnStarknet(params: ProofVerifyParams) {
   
     let result;
     try {
-      result = await verifierContract.verify_ultra_keccak_honk_proof(calldata.slice(1)); // slice(1) = remove len prefix
+      result = await verifierContract.verify_ultra_keccak_honk_proof(calldata.slice(1));
     } catch (error) {
       console.log(error)
     }

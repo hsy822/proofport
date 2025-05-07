@@ -1,40 +1,68 @@
 import React, { useEffect, useState } from "react";
-import { groupMembership, verifyProof } from "@proofport/sdk";
+import { groupMembership, verifyProof, getRegistry } from "@proofport/sdk";
 import { JsonRpcProvider, Wallet } from "ethers";
-
-const whitelist = [
-  "0x4Ca47a1126f0A806cDC0AAa2268446A09D6A7CD6",
-  "0x0D27320672eB296d39dF4c57e36B6b199091ECB5",
-  "0xAd94ba6EDAEb297EFC012429e70467C0725692e3", // My address
-  "0x8A50Fb1B8F164AC74fBee2966b9C26C6A985847D",
-];
 
 export function StarknetPanel() {
   const [proof, setProof] = useState("");
   const [status, setStatus] = useState<"idle" | "verifying" | "success" | "fail">("idle");
   const [root, setRoot] = useState("");
   const [calldata, setCalldata] = useState();
-  
-  const [circuitId, setCircuitId] = useState("");
+  const [circuitId, setCircuitId] = useState("group-membership");
+  const [registryDescription, setRegistryDescription] = useState("");
+  const [verifierAddress, setVerifierAddress] = useState("");
+
+  const [whitelist, setWhitelist] = useState<string[]>([
+      "0x076cFe339144246C87F3E7dEacFc23CAfF9283Da9182ab58D05A410800c491Ea",
+      "0x02433E38ad721690Bfa5B2b05df05480819efa4Ef676F0971b5B10dB0dd1C91A",
+      "0x02A9f6C3206B56647c363a825890F5f088e1AfBc6b2EfA1516764eE58405b7ee",
+  ]);
+  const [newAddress, setNewAddress] = useState("");
+  const [threshold, setThreshold] = useState("1000000000000000000"); // 1 ETH
 
   const chainId = "starknet-devnet";
 
   const proofData = groupMembership.useProofListener();
   
+  // Load circuit metadata from registry
   useEffect(() => {
-    console.log(proofData)
-    if (proofData) {
-      if(chainId == "starknet-devnet"){
-        setProof(proofData.proof);
-        setRoot(proofData.publicInputs.root);
-        setCircuitId(proofData.circuitId);
-        setCalldata(proofData.calldata);
+    (async () => {
+      try {
+        const registry = await getRegistry(); // SDK function to fetch registry
+        const entry = registry[circuitId];
+        if (entry) {
+          setRegistryDescription(entry.description);
+          const verifier = registry[circuitId]?.chains?.[chainId];
+          if (verifier) {
+            setVerifierAddress(verifier.evm_address || verifier.starknet_address || "");
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load registry info:", err);
       }
+    })();
+  }, [circuitId, chainId]);
+
+  useEffect(() => {
+    if (!proofData) return;
+
+    setProof(proofData.proof);
+    setCircuitId(proofData.circuitId);
+    setCalldata(proofData.calldata);
+
+    if (proofData.circuitId === "group-membership") {
+      setRoot(proofData.publicInputs.root);
+    } else if (proofData.circuitId === "eth-balance") {
+      setThreshold(proofData.publicInputs.threshold);
     }
   }, [proofData]);
   
   const handleGenerateProof = async () => {
-    groupMembership.openGroupMembershipProofRequest(chainId, whitelist);
+    // Dispatch proof request depending on selected circuit
+    if (circuitId === "group-membership") {
+      groupMembership.openGroupMembershipProofRequest(chainId, whitelist);
+    } else if (circuitId === "eth-balance") {
+      // groupMembership.openEthBalanceProofRequest(chainId, threshold); 
+    }
   };
 
   const handleVerify = async () => {
@@ -42,39 +70,157 @@ export function StarknetPanel() {
     try {
       const provider = new JsonRpcProvider("http://localhost:8545");
       const wallet = Wallet.createRandom().connect(provider);
-      console.log(calldata)
-      const ok = await verifyProof(
-        { circuitId, chainId, publicInputs: { root }, proof, calldata },
-        wallet
-      );
+      
+      let ok = false;
+
+      // Dynamically choose proof inputs depending on circuit
+      switch (circuitId) {
+        case "group-membership":
+          ok = await verifyProof(
+            {
+              circuitId,
+              chainId,
+              publicInputs: { root },
+              proof,
+              calldata
+            },
+            wallet
+          );
+          break;
+
+        case "eth-balance":
+          ok = await verifyProof(
+            {
+              circuitId,
+              chainId,
+              publicInputs: { threshold },
+              proof,
+              calldata
+            },
+            wallet
+          );
+          break;
+
+        default:
+          throw new Error("Unsupported circuit");
+      }
       setStatus(ok ? "success" : "fail");
     } catch {
       setStatus("fail");
     }
   };
 
-  return (
-    <div className="border border-purple-300 bg-purple-50 rounded-xl p-6">
-      <h2 className="text-xl font-semibold text-purple-900">Starknet Dapp</h2>
-      <p className="text-sm text-gray-700 mb-4">
-        Prove that your Twitter account has over 100 followers — without revealing your handle.
-      </p>
+  const handleAddAddress = () => {
+    const addr = newAddress.trim();
+    if (!/^0x[a-fA-F0-9]{64}$/.test(addr)) {
+      alert("Please enter a valid Starknet address.");
+      return;
+    }
+    if (whitelist.includes(addr)) {
+      alert("Address is already in the allowlist.");
+      return;
+    }
+    setWhitelist((prev) => [...prev, addr]);
+    setNewAddress("");
+  };
 
-      <button className="mt-4 px-4 py-2 bg-purple-700 text-white rounded w-full" onClick={handleGenerateProof}>
-        🔐 Generate Social Proof
+  return (
+    <div className="max-w-2xl mx-auto border border-purple-300 bg-purple-50 rounded-xl p-6">
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">Select Circuit</label>
+        <select
+          value={circuitId}
+          onChange={(e) => setCircuitId(e.target.value)}
+          className="w-full p-2 border rounded"
+        >
+          <option value="group-membership">Group Membership</option>
+          <option value="eth-balance">ETH Balance</option>
+        </select>
+      </div>
+      
+      {/* Circuit-specific UI */}
+      {circuitId === "group-membership" && (
+        <>
+          <h2 className="text-xl font-semibold text-purple-900">Starknet Dapp: {circuitId}</h2>
+          <p className="text-sm text-gray-700 mb-4">{registryDescription}</p>
+          <div className="mb-4 text-sm text-gray-700">
+            <p className="font-medium">Allowlist:</p>
+            <ul className="ml-4 list-disc text-xs">
+              {whitelist.map((addr, i) => (
+                <li key={i}><code>{addr}</code></li>
+              ))}
+            </ul>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Add your address to the allowlist
+            </label>
+            <p className="text-xs text-gray-600 mb-2">
+              Copy your Ethereum address and paste it below to test group membership.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newAddress}
+                onChange={(e) => setNewAddress(e.target.value)}
+                placeholder="0x..."
+                className="flex-1 p-2 border rounded"
+              />
+              <button
+                onClick={handleAddAddress}
+                className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {circuitId === "eth-balance" && (
+        <>
+          <h2 className="text-xl font-semibold text-purple-900">Starknet Dapp</h2>
+          <p className="text-sm text-gray-700 mb-4">{registryDescription}</p>
+          <label className="block text-sm mb-1 font-medium">ETH Threshold (in wei)</label>
+          <input
+            type="text"
+            value={threshold}
+            onChange={(e) => setThreshold(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+          />
+        </>
+      )}
+      <button
+        className="mt-2 px-4 py-2 bg-purple-700 text-white rounded w-full font-semibold hover:bg-gray-800 transition"
+        onClick={handleGenerateProof}
+      >
+        Generate Proof
       </button>
 
+      <label className="block mt-6 text-sm font-medium">Proof</label>
       <textarea
         value={proof}
         onChange={(e) => setProof(e.target.value)}
         placeholder="0x..."
         rows={4}
-        className="w-full p-2 border rounded mt-4 bg-white"
+        className="w-full p-2 border rounded mt-4 bg-white text-sm font-mono"
+        disabled
       />
 
-      <button className="mt-4 px-4 py-2 bg-green-600 text-white rounded w-full" onClick={handleVerify}>
-        ✅ On-chain Verification
+      <button
+        className="mt-4 px-4 py-2 bg-green-600 text-white rounded w-full font-semibold hover:bg-green-700 transition"
+        onClick={handleVerify}
+      >
+        On-chain Verification
       </button>
+
+      {verifierAddress && (
+        <div className="mt-6 text-xs text-gray-600">
+          <p>
+            Verifier Contract: {verifierAddress}
+          </p>
+        </div>
+      )}
 
       {proof && status === "idle" && (
         <p className="mt-4 text-purple-600">Proof received. Ready to verify on-chain.</p>

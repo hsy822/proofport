@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { groupMembership, verifyProof } from "@proofport/sdk";
+import { groupMembership, verifyProof, getRegistry } from "@proofport/sdk";
 import { JsonRpcProvider, Wallet } from "ethers";
-
-const whitelist = [
-  "0x4Ca47a1126f0A806cDC0AAa2268446A09D6A7CD6",
-  "0x0D27320672eB296d39dF4c57e36B6b199091ECB5",
-  "0xAd94ba6EDAEb297EFC012429e70467C0725692e3",
-  "0x8A50Fb1B8F164AC74fBee2966b9C26C6A985847D",
-];
 
 export function EthereumPanel() {
   const [proof, setProof] = useState("");
   const [status, setStatus] = useState<"idle" | "verifying" | "success" | "fail">("idle");
   const [circuitId, setCircuitId] = useState("group-membership");
+  const [registryDescription, setRegistryDescription] = useState("");
+  const [verifierAddress, setVerifierAddress] = useState("");
+
+  const [whitelist, setWhitelist] = useState<string[]>([
+    "0x4Ca47a1126f0A806cDC0AAa2268446A09D6A7CD6",
+    "0x0D27320672eB296d39dF4c57e36B6b199091ECB5",
+    "0x8A50Fb1B8F164AC74fBee2966b9C26C6A985847D",
+  ]);
+  const [newAddress, setNewAddress] = useState("");
 
   const [root, setRoot] = useState("");
   const [threshold, setThreshold] = useState("1000000000000000000"); // 1 ETH
@@ -20,8 +22,26 @@ export function EthereumPanel() {
   const chainId = "anvil";
   const proofData = groupMembership.useProofListener();
 
+  // Load circuit metadata from registry
   useEffect(() => {
-    // if (!proofData || proofData.chainId !== chainId) return;
+    (async () => {
+      try {
+        const registry = await getRegistry(); // SDK function to fetch registry
+        const entry = registry[circuitId];
+        if (entry) {
+          setRegistryDescription(entry.description);
+          const verifier = registry[circuitId]?.chains?.[chainId];
+          if (verifier) {
+            setVerifierAddress(verifier.evm_address || verifier.starknet_address || "");
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load registry info:", err);
+      }
+    })();
+  }, [circuitId, chainId]);
+
+  useEffect(() => {
     if (!proofData) return;
 
     setProof(proofData.proof);
@@ -35,6 +55,7 @@ export function EthereumPanel() {
   }, [proofData]);
 
   const handleGenerateProof = async () => {
+    // Dispatch proof request depending on selected circuit
     if (circuitId === "group-membership") {
       groupMembership.openGroupMembershipProofRequest(chainId, whitelist);
     } else if (circuitId === "eth-balance") {
@@ -50,6 +71,7 @@ export function EthereumPanel() {
 
       let ok = false;
 
+      // Dynamically choose proof inputs depending on circuit
       switch (circuitId) {
         case "group-membership":
           ok = await verifyProof(
@@ -86,6 +108,20 @@ export function EthereumPanel() {
     }
   };
 
+  const handleAddAddress = () => {
+    const addr = newAddress.trim();
+    if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) {
+      alert("Please enter a valid Ethereum address.");
+      return;
+    }
+    if (whitelist.includes(addr)) {
+      alert("Address is already in the allowlist.");
+      return;
+    }
+    setWhitelist((prev) => [...prev, addr]);
+    setNewAddress("");
+  };
+
   return (
     <div className="max-w-2xl mx-auto border border-yellow-300 bg-yellow-50 rounded-xl p-6">
       <div className="mb-4">
@@ -100,12 +136,11 @@ export function EthereumPanel() {
         </select>
       </div>
 
+      {/* Circuit-specific UI */}
       {circuitId === "group-membership" && (
         <>
-          <h2 className="text-xl font-bold text-yellow-900 mb-2">Ethereum DApp: Group Membership</h2>
-          <p className="text-sm text-gray-700 mb-4">
-            Prove that your Ethereum wallet is in the allowlist — without revealing which one.
-          </p>
+          <h2 className="text-xl font-bold text-yellow-900 mb-2">Ethereum DApp: {circuitId}</h2>
+          <p className="text-sm text-gray-700 mb-4">{registryDescription}</p>
           <div className="mb-4 text-sm text-gray-700">
             <p className="font-medium">Allowlist:</p>
             <ul className="ml-4 list-disc text-xs">
@@ -114,15 +149,36 @@ export function EthereumPanel() {
               ))}
             </ul>
           </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Add your address to the allowlist
+            </label>
+            <p className="text-xs text-gray-600 mb-2">
+              Copy your Ethereum address and paste it below to test group membership.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newAddress}
+                onChange={(e) => setNewAddress(e.target.value)}
+                placeholder="0x..."
+                className="flex-1 p-2 border rounded"
+              />
+              <button
+                onClick={handleAddAddress}
+                className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+              >
+                Add
+              </button>
+            </div>
+          </div>
         </>
       )}
 
       {circuitId === "eth-balance" && (
         <>
           <h2 className="text-xl font-bold text-yellow-900 mb-2">Ethereum DApp: ETH Balance</h2>
-          <p className="text-sm text-gray-700 mb-4">
-            Prove that your wallet holds at least the specified ETH threshold.
-          </p>
+          <p className="text-sm text-gray-700 mb-4">{registryDescription}</p>
           <label className="block text-sm mb-1 font-medium">ETH Threshold (in wei)</label>
           <input
             type="text"
@@ -140,13 +196,14 @@ export function EthereumPanel() {
         Generate Proof
       </button>
 
-      <label className="block mt-6 text-sm font-medium">Paste your proof</label>
+      <label className="block mt-6 text-sm font-medium">Proof</label>
       <textarea
         value={proof}
         onChange={(e) => setProof(e.target.value)}
         placeholder="0x..."
         rows={4}
         className="w-full p-2 border rounded mt-1 bg-white text-sm font-mono"
+        disabled
       />
 
       <button
@@ -155,6 +212,14 @@ export function EthereumPanel() {
       >
         On-chain Verification
       </button>
+
+      {verifierAddress && (
+        <div className="mt-6 text-xs text-gray-600">
+          <p>
+            Verifier Contract: {verifierAddress}
+          </p>
+        </div>
+      )}
 
       {proof && status === "idle" && (
         <p className="mt-4 text-blue-600 text-sm">Proof received. Click Submit to verify on-chain.</p>
