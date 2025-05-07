@@ -37,12 +37,12 @@
     },
     "chains": {
       "anvil": {
-        "evm_address": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
-        "deployed_at": "2025-05-07T15:57:34.985Z"
+        "evm_address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        "deployed_at": "2025-05-07T17:47:37.378Z"
       },
       "starknet-devnet": {
-        "starknet_address": "0x07126dff78108a6a27df2ab5f308eb07e44b9d7064ef7b049aaae71b8a626c36",
-        "deployed_at": "2025-05-07T15:57:34.991Z"
+        "starknet_address": "0x050c213052bb189158ad89026d1ae85f8e6d99e255075cc6b72291d52560d972",
+        "deployed_at": "2025-05-07T17:47:37.379Z"
       }
     }
   },
