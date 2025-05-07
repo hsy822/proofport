@@ -6,9 +6,8 @@ export interface GroupMembershipProofRequest {
   };
   metadata?: {
     tree?: string;
-    leaf: string;
-    index: string;
-    hashpath: string; // stringified JSON array
+    nonce?: string;
+    issued_at?: number;
   };
 }
 
@@ -18,7 +17,10 @@ export interface EthBalanceProofRequest {
   publicInputs: {
     threshold: string;
   };
-  metadata?: undefined;
+  metadata?: {
+    nonce?: string;
+    issued_at?: number;
+  };
 }
 
 // export interface TwitterFollowersProofRequest { ... }

@@ -19,11 +19,13 @@ export function getProofRequestUrl(params: ProofRequestParams): string {
   });
 
   // Optional: Merkle proof metadata
-  if (metadata?.leaf) query.append("leaf", metadata.leaf);
-  if (metadata?.index) query.append("index", metadata.index);
-  if (metadata?.hashpath) query.append("hashpath", metadata.hashpath); // Already stringified JSON
-  if (metadata?.tree) query.append("tree", metadata.tree); // Optional fallback
-
+  if (circuitId === "group-membership" && metadata) {
+    if (metadata.tree) query.append("tree", metadata.tree);
+  }
+  
+  if (metadata?.nonce) query.append("nonce", metadata.nonce);
+  if (metadata?.issued_at) query.append("issued_at", metadata.issued_at.toString());
+  
   return `${PROOFPORT_BASE_URL}?${query.toString()}`;
 }
 

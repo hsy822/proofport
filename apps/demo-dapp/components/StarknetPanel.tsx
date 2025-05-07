@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { groupMembership, verifyProof, getRegistry } from "@proofport/sdk";
+import { groupMembership, ethBalance, verifyProof, getRegistry } from "@proofport/sdk";
 import { JsonRpcProvider, Wallet } from "ethers";
 
 export function StarknetPanel() {
@@ -10,6 +10,7 @@ export function StarknetPanel() {
   const [circuitId, setCircuitId] = useState("group-membership");
   const [registryDescription, setRegistryDescription] = useState("");
   const [verifierAddress, setVerifierAddress] = useState("");
+  const [sessionNonce, setSessionNonce] = useState(() => crypto.randomUUID());
 
   const [whitelist, setWhitelist] = useState<string[]>([
       "0x076cFe339144246C87F3E7dEacFc23CAfF9283Da9182ab58D05A410800c491Ea",
@@ -17,11 +18,10 @@ export function StarknetPanel() {
       "0x02A9f6C3206B56647c363a825890F5f088e1AfBc6b2EfA1516764eE58405b7ee",
   ]);
   const [newAddress, setNewAddress] = useState("");
-  const [threshold, setThreshold] = useState("1000000000000000000"); // 1 ETH
-
+  const [thresholdInput, setThresholdInput] = useState("1000000000000000000"); // 1 ETH
+  const [thresholdProofValue, setThresholdProofValue] = useState<string | null>(null);
+    
   const chainId = "starknet-devnet";
-
-  const proofData = groupMembership.useProofListener();
   
   // Load circuit metadata from registry
   useEffect(() => {
@@ -42,26 +42,52 @@ export function StarknetPanel() {
     })();
   }, [circuitId, chainId]);
 
+  const proofDataForGroupMembership = groupMembership.useProofListenerWithValidation({
+    expectedNonce: sessionNonce,
+    maxAgeMs: 300_000,
+    allowedOrigin: "http://localhost:3001",
+  });
+
   useEffect(() => {
-    if (!proofData) return;
+    if (!proofDataForGroupMembership) return;
 
-    setProof(proofData.proof);
-    setCircuitId(proofData.circuitId);
-    setCalldata(proofData.calldata);
-
-    if (proofData.circuitId === "group-membership") {
-      setRoot(proofData.publicInputs.root);
-    } else if (proofData.circuitId === "eth-balance") {
-      setThreshold(proofData.publicInputs.threshold);
-    }
-  }, [proofData]);
+    setProof(proofDataForGroupMembership.proof);
+    setCircuitId(proofDataForGroupMembership.circuitId);
+    setCalldata(proofDataForGroupMembership.calldata);
+    setRoot(proofDataForGroupMembership.publicInputs.root);
+    
+  }, [proofDataForGroupMembership]);
   
+  const proofDataForEthBalance = ethBalance.useProofListenerWithValidation({
+    expectedNonce: sessionNonce,
+    maxAgeMs: 300_000,
+    allowedOrigin: "http://localhost:3001",
+  });
+
+  useEffect(() => {
+    if (!proofDataForEthBalance) return;
+    setProof(proofDataForEthBalance.proof);
+    setCircuitId(proofDataForEthBalance.circuitId);
+    setCalldata(proofDataForEthBalance.calldata);
+    setThresholdProofValue(proofDataForEthBalance.publicInputs.threshold);
+  }, [proofDataForEthBalance]);
+
   const handleGenerateProof = async () => {
     // Dispatch proof request depending on selected circuit
     if (circuitId === "group-membership") {
-      groupMembership.openGroupMembershipProofRequest(chainId, whitelist);
+      groupMembership.openGroupMembershipProofRequest(
+        chainId, 
+        whitelist, 
+        sessionNonce,
+        Date.now() // issuedAt
+      );
     } else if (circuitId === "eth-balance") {
-      // groupMembership.openEthBalanceProofRequest(chainId, threshold); 
+      ethBalance.openEthBalanceProofRequest(
+        chainId, 
+        thresholdInput,
+        sessionNonce,
+        Date.now() // issuedAt
+      );  
     }
   };
 
@@ -93,7 +119,7 @@ export function StarknetPanel() {
             {
               circuitId,
               chainId,
-              publicInputs: { threshold },
+              publicInputs: { threshold: toBytes32Hex(thresholdProofValue ?? thresholdInput) },
               proof,
               calldata
             },
@@ -184,8 +210,8 @@ export function StarknetPanel() {
           <label className="block text-sm mb-1 font-medium">ETH Threshold (in wei)</label>
           <input
             type="text"
-            value={threshold}
-            onChange={(e) => setThreshold(e.target.value)}
+            value={thresholdInput}
+            onChange={(e) => setThresholdInput(e.target.value)}
             className="w-full p-2 border rounded mb-4"
           />
         </>
@@ -236,4 +262,8 @@ export function StarknetPanel() {
       )}
     </div>
   );
+}
+
+function toBytes32Hex(n: string | bigint): string {
+  return "0x" + BigInt(n).toString(16).padStart(64, "0");
 }

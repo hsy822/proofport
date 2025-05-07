@@ -22,38 +22,20 @@ function parseCIPMetadata(circuitName) {
     file.toLowerCase().includes(circuitName.toLowerCase())
   );
 
-  if (!cipFile) {
-    throw new Error(`No CIP markdown file found for circuit: ${circuitName}`);
-  }
+  if (!cipFile) throw new Error(`No CIP markdown file found for circuit: ${circuitName}`);
 
   const cipPath = path.join(cipsDir, cipFile);
-  if (!existsSync(cipPath)) {
-    throw new Error(`CIP file not found: ${cipPath}`);
-  }
-
   const content = readFileSync(cipPath, "utf8");
-  const metadataBlock = content.split("## 0. Metadata")[1]?.split("<!-- End of Metadata -->")[0];
-  if (!metadataBlock) {
-    throw new Error(`Metadata section not found in CIP: ${cipPath}`);
-  }
+  const metadataBlock = content.split("## 0. Metadata")[1]?.split("---")[0];
+  if (!metadataBlock) throw new Error(`Metadata section not found in CIP: ${cipPath}`);
 
   const getField = (field) => metadataBlock.match(new RegExp(`${field}:\\s*(.*)`))?.[1]?.trim();
-  const circuit_id = getField("circuit_id");
-  const version = getField("version");
-  const description = getField("description");
 
-  // parse public_inputs
-  const publicInputsSection = metadataBlock.split("public_inputs:")[1];
-  if (!publicInputsSection) {
-    throw new Error("public_inputs section not found in Metadata.");
-  }
-  const public_inputs = [...publicInputsSection.matchAll(/-\s*(\w+)/g)].map(m => m[1]);
-
-  if (!circuit_id || !version || !description || public_inputs.length === 0) {
-    throw new Error(`Incomplete metadata in CIP: ${cipPath}`);
-  }
-
-  return { circuit_id, version, description, public_inputs };
+  return {
+    circuit_id: getField("circuit_id"),
+    version: getField("version"),
+    description: getField("description")
+  };
 }
 
 function tryGitPushIfAvailable() {
@@ -86,6 +68,7 @@ async function main() {
 
   const circuitPath = path.resolve("../../packages/circuits", circuitName);
   const verifierOutputPath = path.join(circuitPath, "target", "Verifier.sol");
+  const circuitJsonPath = path.join(circuitPath, "target", `${circuitName.replace(/-/g, "_")}.json`);
 
   if (!existsSync(circuitPath)) {
     console.error(`${colors.red}Error: Circuit path not found: ${circuitPath}${colors.reset}`);
@@ -156,6 +139,7 @@ async function main() {
 
   console.log(`\n### Step 7: Declaring and Deploying Starknet Contract`);
   console.log("---");
+  
   const declareResult = await execa("sncast", [
     "--account", "devnet0",
     "--accounts-file", accountsFilePath,
@@ -189,19 +173,22 @@ async function main() {
   console.log("---");
 
   // Fetch metadata from CIP
-  const { circuit_id, version, description, public_inputs } = parseCIPMetadata(circuitName);
-
-  // Load compiled circuit metadata (target/${circuit_name}.json)
-  const circuitJsonPath = path.join(circuitPath, "target", `${circuitName.replace(/-/g, "_")}.json`);
+  const { circuit_id, version, description } = parseCIPMetadata(circuitName);
   const compiledCircuit = JSON.parse(readFileSync(circuitJsonPath, "utf-8"));
   const { noir_version, abi, hash, bytecode } = compiledCircuit;
 
+  const public_inputs = abi.parameters
+    .filter(p => p.visibility === "public")
+    .map(p => p.name);
+    
   // Update registry
   const registryPath = path.resolve("../../packages/registry/verifier_registry.json");
   const existingRegistry = existsSync(registryPath) ? JSON.parse(readFileSync(registryPath)) : {};
 
   const chainIdEvm = "anvil";              // local EVM
   const chainIdStarknet = "starknet-devnet"; // local Starknet
+
+  existingRegistry[circuit_id] = {};
 
   existingRegistry[circuit_id] = {
     circuit_id,

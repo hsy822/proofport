@@ -1,0 +1,5 @@
+[package]
+name = "eth_balance"
+type = "bin"
+authors = ["Proofport"]
+description = "Proofport CIP-002 ETH Balance Proof Circuit"

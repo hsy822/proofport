@@ -14,7 +14,9 @@
 
 ## 1. Overview
 
-This circuit verifies, in zero-knowledge, that a user-provided leaf is included in a Merkle tree defined by a given root.  
+> This circuit uses the `binary_merkle_root` implementation from the [privacy-scaling-explorations/zk-kit.noir](https://github.com/privacy-scaling-explorations/zk-kit.noir) repository.
+
+> This circuit verifies, in zero-knowledge, that a user-provided leaf is included in a Merkle tree defined by a given root.  
 It uses the proven and audited `binary_merkle_root` helper function for compatibility and correctness.
 
 ---
@@ -32,8 +34,6 @@ It uses the proven and audited `binary_merkle_root` helper function for compatib
 ---
 
 ## 3. Circuit Description (Noir)
-
-> This circuit uses the `binary_merkle_root` implementation from the [privacy-scaling-explorations/zk-kit.noir](https://github.com/privacy-scaling-explorations/zk-kit.noir) repository.
 
 ```rust
 use binary_merkle_root::binary_merkle_root;

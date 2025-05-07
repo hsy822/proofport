@@ -57,7 +57,7 @@ export function useProofListenerWithValidation({
         console.warn(`Message too old: issued_at=${msg.issued_at}, now=${Date.now()}`);
         return;
       }
-  
+
       console.log("Valid message, storing proof data.");
       setData({
         proof: msg.proof,
@@ -68,7 +68,7 @@ export function useProofListenerWithValidation({
         nonce: msg.nonce,
       });
     }
-  
+
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [expectedNonce, maxAgeMs, allowedOrigin]);
