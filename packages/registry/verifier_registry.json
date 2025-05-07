@@ -80,6 +80,7 @@
     "version": "CIP-002",
     "description": "Proves in zero-knowledge that a user's ETH balance exceeds a given threshold (in wei)",
     "public_inputs": [
+      "threshold",
       "knowledge",
       "side"
     ],
@@ -114,12 +115,12 @@
     },
     "chains": {
       "anvil": {
-        "evm_address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-        "deployed_at": "2025-05-07T05:51:06.219Z"
+        "evm_address": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+        "deployed_at": "2025-05-07T06:38:45.178Z"
       },
       "starknet-devnet": {
-        "starknet_address": "0x00f7f6a66688cc5f47680ca1059a50e5a5477588c487313b233cf030ca6c7e44",
-        "deployed_at": "2025-05-07T05:51:06.224Z"
+        "starknet_address": "0x049748e2eaf6a6292bc9d6796db2115054b201c2adb450dfcf402ac6cd3710c4",
+        "deployed_at": "2025-05-07T06:38:45.178Z"
       }
     }
   }
