@@ -27,7 +27,7 @@ importers:
         specifier: ^6.4.7
         version: 6.4.7(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(starknet@7.1.0)(zod@3.24.4)
       '@proofport/sdk':
-        specifier: link:../../packages/sdk
+        specifier: workspace:*
         version: link:../../packages/sdk
       '@zkpassport/poseidon2':
         specifier: ^0.6.1
