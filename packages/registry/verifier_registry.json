@@ -74,5 +74,52 @@
         "deployed_at": "2025-05-08T05:34:17.150Z"
       }
     }
+  },
+  "eth-balance": {
+    "circuit_id": "eth-balance",
+    "version": "CIP-002",
+    "description": "Proves in zero-knowledge that a user's ETH balance exceeds a given threshold (in wei, Sepolia)",
+    "public_inputs": [
+      "threshold"
+    ],
+    "metadata": {
+      "noir_version": "1.0.0-beta.3+ceaa1986628197bd1170147f6a07f0f98d21030a",
+      "hash": 17654193703643832000,
+      "abi": {
+        "parameters": [
+          {
+            "name": "balance",
+            "type": {
+              "kind": "integer",
+              "sign": "unsigned",
+              "width": 64
+            },
+            "visibility": "private"
+          },
+          {
+            "name": "threshold",
+            "type": {
+              "kind": "integer",
+              "sign": "unsigned",
+              "width": 64
+            },
+            "visibility": "public"
+          }
+        ],
+        "return_type": null,
+        "error_types": {}
+      },
+      "bytecode": "H4sIAAAAAAAA/7VT2w6DIAwVMLto9rQfoVwU3vYrM8P//4RtWUmaykw29CSmtJXDaQui+UC9vgOuBfoC/RuLCYy1mJfNEpLsfUPXASiX1YNzaTQJLNy1iVPw2vlpCBDAB/8wwdoUXBjjFEcdwdkEs492RjLxvy7ggULpm3HLQj8VH5AiB2a0dUIWwvZq/o9cmnGB3FCX2ulSCDaLWp1yw7kKcldEQTON8dwJ7RltR/IVveQwmb/fh18fCzV2ZN2zXH6IbfO9N9yXzK79u9bzSyGXOa9oqd5cxxOfWPg/5QUAAA=="
+    },
+    "chains": {
+      "anvil": {
+        "evm_address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        "deployed_at": "2025-05-08T05:35:27.484Z"
+      },
+      "starknet-devnet": {
+        "starknet_address": "0x0619d5d2182c874203aec08ccadb107854342b12c18720aa8a94709fc3d79d19",
+        "deployed_at": "2025-05-08T05:35:27.486Z"
+      }
+    }
   }
 }
