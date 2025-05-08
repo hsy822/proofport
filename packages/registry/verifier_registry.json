@@ -1,51 +1,4 @@
 {
-  "eth-balance": {
-    "circuit_id": "eth-balance",
-    "version": "CIP-002",
-    "description": "Proves in zero-knowledge that a user's ETH balance exceeds a given threshold (in wei, Sepolia)",
-    "public_inputs": [
-      "threshold"
-    ],
-    "metadata": {
-      "noir_version": "1.0.0-beta.3+ceaa1986628197bd1170147f6a07f0f98d21030a",
-      "hash": 17654193703643832000,
-      "abi": {
-        "parameters": [
-          {
-            "name": "balance",
-            "type": {
-              "kind": "integer",
-              "sign": "unsigned",
-              "width": 64
-            },
-            "visibility": "private"
-          },
-          {
-            "name": "threshold",
-            "type": {
-              "kind": "integer",
-              "sign": "unsigned",
-              "width": 64
-            },
-            "visibility": "public"
-          }
-        ],
-        "return_type": null,
-        "error_types": {}
-      },
-      "bytecode": "H4sIAAAAAAAA/7VT2w6DIAwVMLto9rQfoVwU3vYrM8P//4RtWUmaykw29CSmtJXDaQui+UC9vgOuBfoC/RuLCYy1mJfNEpLsfUPXASiX1YNzaTQJLNy1iVPw2vlpCBDAB/8wwdoUXBjjFEcdwdkEs492RjLxvy7ggULpm3HLQj8VH5AiB2a0dUIWwvZq/o9cmnGB3FCX2ulSCDaLWp1yw7kKcldEQTON8dwJ7RltR/IVveQwmb/fh18fCzV2ZN2zXH6IbfO9N9yXzK79u9bzSyGXOa9oqd5cxxOfWPg/5QUAAA=="
-    },
-    "chains": {
-      "anvil": {
-        "evm_address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        "deployed_at": "2025-05-07T17:47:37.378Z"
-      },
-      "starknet-devnet": {
-        "starknet_address": "0x050c213052bb189158ad89026d1ae85f8e6d99e255075cc6b72291d52560d972",
-        "deployed_at": "2025-05-07T17:47:37.379Z"
-      }
-    }
-  },
   "group-membership": {
     "circuit_id": "group-membership",
     "version": "CIP-001",
@@ -114,11 +67,11 @@
     "chains": {
       "anvil": {
         "evm_address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-        "deployed_at": "2025-05-07T17:46:59.864Z"
+        "deployed_at": "2025-05-08T05:34:17.143Z"
       },
       "starknet-devnet": {
-        "starknet_address": "0x0682a7a974c421390831c90b058836d28e8e22cf8834af71b291ba49572888bb",
-        "deployed_at": "2025-05-07T17:46:59.869Z"
+        "starknet_address": "0x0514fa711c83a7752ef202949c05d20cb7d3091d4376e5c04063c5f376b71d0a",
+        "deployed_at": "2025-05-08T05:34:17.150Z"
       }
     }
   }
