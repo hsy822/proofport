@@ -22,7 +22,7 @@ export function EthereumPanel() {
   const [thresholdProofValue, setThresholdProofValue] = useState<string | null>(null);
   
   const chainId = "anvil";
-  const allowedOrigin = "htts://zkdev.net";
+  const allowedOrigin = "https://zkdev.net";
   // const allowedOrigin = "http://localhost:3001";
   const maxAgeMs = 300_000;
   const networkUrl = "https://78ed-54-180-132-187.ngrok-free.app";
