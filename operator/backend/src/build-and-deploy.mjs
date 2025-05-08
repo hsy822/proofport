@@ -13,11 +13,8 @@ const colors = {
   red: "\x1b[31m",
 };
 
-// const startnetUrl = "http://localhost:5050";
-// const ethereumUrl = "http://localhost:8545";
-
-const startnetUrl = "https://7faf-54-180-132-187.ngrok-free.app";
-const ethereumUrl = "https://78ed-54-180-132-187.ngrok-free.app";
+const startnetUrl = "http://localhost:5050";
+const ethereumUrl = "http://localhost:8545";
 
 // Parse CIP metadata
 function parseCIPMetadata(circuitName) {
