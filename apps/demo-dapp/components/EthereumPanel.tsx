@@ -22,6 +22,10 @@ export function EthereumPanel() {
   const [thresholdProofValue, setThresholdProofValue] = useState<string | null>(null);
   
   const chainId = "anvil";
+  const allowedOrigin = "htts://zkdev.net";
+  // const allowedOrigin = "http://localhost:3001";
+  const maxAgeMs = 300_000;
+  const networkUrl = "http://localhost:8545";
 
   // Load circuit metadata from registry
   useEffect(() => {
@@ -44,13 +48,12 @@ export function EthereumPanel() {
 
   const proofDataForGroupMembership = groupMembership.useProofListenerWithValidation({
     expectedNonce: sessionNonce,
-    maxAgeMs: 300_000,
-    allowedOrigin: "http://localhost:3001",
+    maxAgeMs,
+    allowedOrigin,
   });
 
   useEffect(() => {
     if (!proofDataForGroupMembership) return;
-
     setProof(proofDataForGroupMembership.proof);
     setCircuitId(proofDataForGroupMembership.circuitId);
     setRoot(proofDataForGroupMembership.publicInputs.root);
@@ -58,8 +61,8 @@ export function EthereumPanel() {
 
   const proofDataForEthBalance = ethBalance.useProofListenerWithValidation({
     expectedNonce: sessionNonce,
-    maxAgeMs: 300_000,
-    allowedOrigin: "http://localhost:3001",
+    maxAgeMs,
+    allowedOrigin,
   });
 
   useEffect(() => {
@@ -91,7 +94,7 @@ export function EthereumPanel() {
   const handleVerify = async () => {
     setStatus("verifying");
     try {
-      const provider = new JsonRpcProvider("http://localhost:8545");
+      const provider = new JsonRpcProvider(networkUrl);
       const wallet = Wallet.createRandom().connect(provider);
 
       let ok = false;
