@@ -1,4 +1,3 @@
-
 import { getProofRequestUrl } from "../../proofport.js";
 
 export function openEthBalanceProofRequest(
@@ -14,7 +13,7 @@ export function openEthBalanceProofRequest(
     metadata: {
       nonce: sessionNonce,
       issued_at: issuedAt,
-    }
+    },
   });
 
   const popup = window.open(url, "_blank");
@@ -27,16 +26,21 @@ export function openEthBalanceProofRequest(
 
   const origin = "https://zkdev.net";
 
+  let attempts = 0;
+  const maxAttempts = 15;
+
   const timer = setInterval(() => {
-    if (!popup || popup.closed) {
+    if (!popup || popup.closed || attempts >= maxAttempts) {
       clearInterval(timer);
       return;
     }
+
     try {
       popup.postMessage(payload, origin);
-      clearInterval(timer);
+      console.log("retrying postMessage:", payload);
+      attempts++;
     } catch {
-      console.warn("postMessage failed, retrying...");
+      console.warn("postMessage attempt failed");
     }
   }, 200);
 }
