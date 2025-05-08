@@ -23,6 +23,8 @@ export function openGroupMembershipProofRequest(chainId: string, whitelist: stri
     issued_at: issuedAt,
   };
 
+  console.log("Dispatching to popup:", payload);
+  
   const origin = "https://zkdev.net";
 
   const timer = setInterval(() => {
