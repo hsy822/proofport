@@ -2,8 +2,12 @@
 import { getProofRequestUrl } from "../../proofport.js";
 import { createMerkleRoot } from "./createMerkleArtifacts.js";
 
-export function openGroupMembershipProofRequest(chainId: string, whitelist: string[], sessionNonce: string, issuedAt: number) {
-
+export function openGroupMembershipProofRequest(
+  chainId: string,
+  whitelist: string[],
+  sessionNonce: string,
+  issuedAt: number
+) {
   const root = createMerkleRoot(whitelist);
   const url = getProofRequestUrl({
     circuitId: "group-membership",
@@ -12,10 +16,11 @@ export function openGroupMembershipProofRequest(chainId: string, whitelist: stri
     metadata: {
       nonce: sessionNonce,
       issued_at: issuedAt,
-    }
+    },
   });
-  
+
   const popup = window.open(url, "_blank");
+  const origin = "https://zkdev.net";
 
   const payload = {
     whitelist,
@@ -23,20 +28,20 @@ export function openGroupMembershipProofRequest(chainId: string, whitelist: stri
     issued_at: issuedAt,
   };
 
-  console.log("Dispatching to popup:", payload);
-  
-  const origin = "https://zkdev.net";
+  let attempts = 0;
+  const maxAttempts = 15;
 
   const timer = setInterval(() => {
-    if (!popup || popup.closed) {
+    if (!popup || popup.closed || attempts >= maxAttempts) {
       clearInterval(timer);
       return;
     }
     try {
       popup.postMessage(payload, origin);
-      clearInterval(timer);
-    } catch {
-      console.warn("postMessage failed, retrying...");
+      console.log("retrying postMessage:", payload);
+      attempts++;
+    } catch (e) {
+      console.warn("postMessage attempt failed:", e);
     }
   }, 200);
 }
