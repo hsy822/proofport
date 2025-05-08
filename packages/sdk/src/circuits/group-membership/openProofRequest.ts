@@ -15,8 +15,26 @@ export function openGroupMembershipProofRequest(chainId: string, whitelist: stri
     }
   });
   
-  const win = window.open(url, "_blank");
-  if (win) {
-    win.name = JSON.stringify({ whitelist, nonce: sessionNonce, issued_at: issuedAt });
-  }
+  const popup = window.open(url, "_blank");
+
+  const payload = {
+    whitelist,
+    nonce: sessionNonce,
+    issued_at: issuedAt,
+  };
+
+  const origin = "https://zkdev.net";
+
+  const timer = setInterval(() => {
+    if (!popup || popup.closed) {
+      clearInterval(timer);
+      return;
+    }
+    try {
+      popup.postMessage(payload, origin);
+      clearInterval(timer);
+    } catch {
+      console.warn("postMessage failed, retrying...");
+    }
+  }, 200);
 }

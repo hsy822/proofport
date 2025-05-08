@@ -1,7 +1,12 @@
 
 import { getProofRequestUrl } from "../../proofport.js";
 
-export function openEthBalanceProofRequest(chainId: string, threshold: string, sessionNonce: string, issuedAt: number) {
+export function openEthBalanceProofRequest(
+  chainId: string,
+  threshold: string,
+  sessionNonce: string,
+  issuedAt: number
+) {
   const url = getProofRequestUrl({
     circuitId: "eth-balance",
     chainId,
@@ -12,6 +17,26 @@ export function openEthBalanceProofRequest(chainId: string, threshold: string, s
     }
   });
 
-  const win = window.open(url, "_blank");
-  if (win) win.name = JSON.stringify({ threshold, nonce: sessionNonce, issued_at: issuedAt });
+  const popup = window.open(url, "_blank");
+
+  const payload = {
+    threshold,
+    nonce: sessionNonce,
+    issued_at: issuedAt,
+  };
+
+  const origin = "https://zkdev.net";
+
+  const timer = setInterval(() => {
+    if (!popup || popup.closed) {
+      clearInterval(timer);
+      return;
+    }
+    try {
+      popup.postMessage(payload, origin);
+      clearInterval(timer);
+    } catch {
+      console.warn("postMessage failed, retrying...");
+    }
+  }, 200);
 }

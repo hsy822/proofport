@@ -13,6 +13,12 @@ const colors = {
   red: "\x1b[31m",
 };
 
+// const startnetUrl = "http://localhost:5050";
+// const ethereumUrl = "http://localhost:8545";
+
+const startnetUrl = "https://7faf-54-180-132-187.ngrok-free.app";
+const ethereumUrl = "https://78ed-54-180-132-187.ngrok-free.app";
+
 // Parse CIP metadata
 function parseCIPMetadata(circuitName) {
   const cipsDir = path.resolve("../../docs/cips");
@@ -112,7 +118,7 @@ async function main() {
 
   console.log(`\n### Step 5: Fetching Predeployed Starknet Account`);
   console.log("---");
-  const accountsResponse = await fetch("http://localhost:5050/predeployed_accounts");
+  const accountsResponse = await fetch(startnetUrl+"/predeployed_accounts");
   const accounts = await accountsResponse.json();
   const firstAccount = accounts[0];
 
@@ -127,7 +133,7 @@ async function main() {
 
   const evmDeployResult = await execa("forge", [
     "create",
-    "--rpc-url", "http://localhost:8545",
+    "--rpc-url", ethereumUrl,
     "--private-key", process.env.PRIVATE_KEY,
     "--broadcast",
     `${verifierOutputPath}:HonkVerifier`
@@ -145,7 +151,7 @@ async function main() {
     "--accounts-file", accountsFilePath,
     "declare",
     "--contract-name", "UltraKeccakHonkVerifier",
-    "--url", "http://localhost:5050",
+    "--url", startnetUrl,
   ], { cwd: path.join(circuitPath, "verifier"), stdio: "pipe" });
 
   const classHashMatch = declareResult.stdout.match(/class_hash:\s*(0x[0-9a-fA-F]+)/);
@@ -157,7 +163,7 @@ async function main() {
     "--accounts-file", accountsFilePath,
     "deploy",
     "--class-hash", classHash,
-    "--url", "http://localhost:5050",
+    "--url", startnetUrl,
   ], { cwd: path.join(circuitPath, "verifier"), stdio: "pipe" });
 
   const contractAddressMatch = deployResult.stdout.match(/contract_address:\s*(0x[0-9a-fA-F]+)/);
