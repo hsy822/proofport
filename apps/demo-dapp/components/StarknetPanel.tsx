@@ -22,7 +22,7 @@ export function StarknetPanel() {
   const [thresholdProofValue, setThresholdProofValue] = useState<string | null>(null);
     
   const chainId = "starknet-devnet";
-  const allowedOrigin = "htts://zkdev.net";
+  const allowedOrigin = "https://zkdev.net";
   // const allowedOrigin = "http://localhost:3001";
   const maxAgeMs = 300_000;
   const networkUrl = 'https://7faf-54-180-132-187.ngrok-free.app';
