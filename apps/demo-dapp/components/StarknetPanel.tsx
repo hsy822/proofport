@@ -25,7 +25,8 @@ export function StarknetPanel() {
   const allowedOrigin = "htts://zkdev.net";
   // const allowedOrigin = "http://localhost:3001";
   const maxAgeMs = 300_000;
-  const networkUrl = "http://localhost:5050";
+  const networkUrl = 'https://7faf-54-180-132-187.ngrok-free.app';
+  // const networkUrl = "http://localhost:5050";
 
   // Load circuit metadata from registry
   useEffect(() => {

@@ -3,7 +3,8 @@ import { getRegistryEntry } from "./registry.js";
 import { Contract, ethers } from "ethers";
 import { arrayify, hexZeroPad } from "@ethersproject/bytes";
 import { Contract as StartnetContract, RpcProvider } from "starknet";
-const PROOFPORT_BASE_URL = "http://localhost:3001/docs/proofport/hello";
+
+const PROOFPORT_BASE_URL = "https://zkdev.net/docs/proofport/hello";
 
 /**
  * Generate the URL to redirect the user to Proofport proof creation page
@@ -90,7 +91,7 @@ export async function verifyProofOnStarknet(params: ProofVerifyParams) {
   try {
     console.log("Starting Starknet proof verification...");
 
-    const provider = new RpcProvider({ nodeUrl: 'http://localhost:5050/rpc' });
+    const provider = new RpcProvider({ nodeUrl: 'https://7faf-54-180-132-187.ngrok-free.app/rpc' });
 
     console.log("Provider initialized:", provider);
 

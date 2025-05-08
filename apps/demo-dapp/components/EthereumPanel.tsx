@@ -25,7 +25,8 @@ export function EthereumPanel() {
   const allowedOrigin = "htts://zkdev.net";
   // const allowedOrigin = "http://localhost:3001";
   const maxAgeMs = 300_000;
-  const networkUrl = "http://localhost:8545";
+  const networkUrl = "https://78ed-54-180-132-187.ngrok-free.app";
+  // const networkUrl = "http://localhost:8545";
 
   // Load circuit metadata from registry
   useEffect(() => {
