@@ -10,6 +10,8 @@ Standardized circuits. Pre-deployed verifiers. Plug-and-play SDK.
 **Proofport** simplifies integration of zero-knowledge proofs into decentralized applications.  
 Instead of reinventing the wheel, developers can use standardized, audited Noir circuits with pre-deployed verifiers and a browser-native proof generation portal.
 
+![screen](https://github.com/user-attachments/assets/425822fb-884f-4461-96a3-438250ab3e6b)
+
 ---
 
 ## Key Features
