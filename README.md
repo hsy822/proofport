@@ -5,6 +5,14 @@ Standardized circuits. Pre-deployed verifiers. Plug-and-play SDK.
 
 ---
 
+## Quick Links
+
+- Demo: [proofport-demo-dapp.vercel.app](https://proofport-demo-dapp.vercel.app)
+- SDK Docs: [zkdev.net/docs/proofport/sdk](https://zkdev.net/docs/proofport/sdk)
+- Web Portal Code: [Proofport.tsx on GitHub](https://github.com/hsy822/zkdev/blob/main/src/components/Proofport.tsx)
+
+---
+
 ## Overview
 
 **Proofport** simplifies integration of zero-knowledge proofs into decentralized applications.  
