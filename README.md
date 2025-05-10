@@ -46,6 +46,8 @@ Instead of reinventing the wheel, developers can use standardized, audited Noir 
 proofport/
 ├── apps/
 │   └── demo-dapp/       # Example dApp using the SDK
+├── docs/
+│   └── cips/            # Circuit Improvement Proposal(CIP)
 ├── packages/
 │   ├── sdk/             # Proofport SDK
 │   ├── circuits/        # Noir circuits (group-membership, eth-balance)
@@ -78,6 +80,8 @@ const ok = await verifyProof({
 ---
 
 ## Environment
+
+Currently, due to verifier size limitations, the system runs only on local devnets such as Anvil and Starknet Devnet, and requires further optimization for mainnet deployment.
 
 | Tool                | Installed Version  | Note |
 |:--------------------|:-------------------|:-----|
